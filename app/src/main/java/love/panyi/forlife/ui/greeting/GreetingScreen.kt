@@ -13,11 +13,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +70,7 @@ fun GreetingRoute(
     Greeting(
         remainingMillis = uiState.remainingMillis,
         onOpenVideoList = onOpenVideoList,
+        onAddMinutes = viewModel::addMinutes,
         modifier = modifier
     )
 }
@@ -76,6 +83,7 @@ fun GreetingRoute(
 fun Greeting(
     remainingMillis: Long,
     onOpenVideoList: () -> Unit,
+    onAddMinutes: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // 布局三件套：Column 从上到下排、Row 从左到右排、Box 叠在一起（类似 FrameLayout）
@@ -134,7 +142,8 @@ fun Greeting(
 
             // ---------- 今日剩余观看时间 ----------
             RemainingTimeCard(remainingMillis)
-            Spacer(Modifier.height(32.dp))
+            AddTimeButton(onAddMinutes)
+            Spacer(Modifier.height(16.dp))
 
             // ---------- 主按钮 ----------
             Button(
@@ -184,6 +193,27 @@ private fun RemainingTimeCard(remainingMillis: Long, modifier: Modifier = Modifi
     }
 }
 
+/** 「加时间」按钮：点开下拉菜单选加几分钟 */
+@Composable
+private fun AddTimeButton(onAddMinutes: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    // DropdownMenu 要和按钮放在同一个 Box 里，才会弹在按钮下面
+    Box {
+        TextButton(onClick = { expanded = true }) { Text("➕ 加时间") }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf(5, 10, 20).forEach { minutes ->
+                DropdownMenuItem(
+                    text = { Text("+$minutes 分钟") },
+                    onClick = {
+                        expanded = false
+                        onAddMinutes(minutes)
+                    }
+                )
+            }
+        }
+    }
+}
+
 /** 毫秒 → "MM:SS"，向上取整到秒（还剩 0.5 秒显示 00:01，不会提前显示 00:00） */
 private fun formatRemaining(millis: Long): String {
     val totalSeconds = (millis + 999) / 1000
@@ -200,6 +230,6 @@ private fun formatRemaining(millis: Long): String {
 @Composable
 fun GreetingPreview() {
     DailyVideoTheme {
-        Greeting(remainingMillis = 12 * 60_000L + 34_000L, onOpenVideoList = {})
+        Greeting(remainingMillis = 12 * 60_000L + 34_000L, onOpenVideoList = {}, onAddMinutes = {})
     }
 }

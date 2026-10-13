@@ -47,4 +47,14 @@ class WatchTimeRepository(
         store.date = today()
         store.usedMillis = used
     }
+
+    /**
+     * 给今天加额度：直接从已看里扣（可以扣成负数），跨天时已看归零，所以只对当天有效。
+     * 先把已看封顶到额度，免得额度用完时多记的零头吃掉加的时间。
+     */
+    fun addExtraMillis(millis: Long) {
+        val used = usedToday().coerceAtMost(DAILY_LIMIT_MILLIS) - millis
+        store.date = today()
+        store.usedMillis = used
+    }
 }

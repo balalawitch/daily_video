@@ -51,4 +51,25 @@ class WatchTimeRepositoryTest {
         repo.addWatchedMillis(60_000L)
         assertEquals(DAILY_LIMIT_MILLIS - 60_000L, repo.remainingMillis())
     }
+
+    @Test
+    fun extraTime_increasesRemaining() {
+        repo.addExtraMillis(5 * 60_000L)
+        assertEquals(DAILY_LIMIT_MILLIS + 5 * 60_000L, repo.remainingMillis())
+    }
+
+    @Test
+    fun extraTime_afterExhausted_givesFullExtra() {
+        // 计时的 finally 可能多记几百毫秒，已看会略超额度；加时间不能被这部分吃掉
+        repo.addWatchedMillis(DAILY_LIMIT_MILLIS + 500L)
+        repo.addExtraMillis(5 * 60_000L)
+        assertEquals(5 * 60_000L, repo.remainingMillis())
+    }
+
+    @Test
+    fun extraTime_onlyLastsToday() {
+        repo.addExtraMillis(10 * 60_000L)
+        today = "2026-10-09"
+        assertEquals(DAILY_LIMIT_MILLIS, repo.remainingMillis())
+    }
 }

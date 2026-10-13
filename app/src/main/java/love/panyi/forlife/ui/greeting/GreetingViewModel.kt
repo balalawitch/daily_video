@@ -22,4 +22,10 @@ class GreetingViewModel(
     fun refreshRemaining() {
         _uiState.value = GreetingUiState(remainingMillis = watchTime.remainingMillis())
     }
+
+    /** 主页点「加时间」：给今天加额度，只当天有效 */
+    fun addMinutes(minutes: Int) {
+        watchTime.addExtraMillis(minutes * 60_000L)
+        refreshRemaining()
+    }
 }
